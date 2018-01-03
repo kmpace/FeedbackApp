@@ -27,19 +27,15 @@ passport.use(
       proxy: true
     },
     //identifying user information can now be save to the database
-    (accessToken, refreshToken, profile, done) => {
-      User.findOne({ googleId: profile.id }).then(existingUser => {
-        //initiates query to find a profile id if it already exists
-        if (existingUser) {
-          //we already have an existing record  with the given profileID
-          done(null, existingUser); //two arguments null- everything is oke and existingUser is the value
-        } else {
-          // we dont have a user record with this ID
-          new User({ googleId: profile.id })
-            .save() //save the user's googleId to Mongo database, new model instance
-            .then(user => done(null, user));
-        }
-      });
+    async (accessToken, refreshToken, profile, done) => {
+      const existingUser = await User.findOne({ googleId: profile.id });
+      if (existingUser) {
+        //we already have an existing record  with the given profileID
+        return done(null, existingUser); //two arguments null- everything is oke and existingUser is the value
+      }
+      // we dont have a user record with this ID
+      const user = await new User({ googleId: profile.id }).save(); //save the user's googleId to Mongo database, new model instance
+      done(null, user);
     }
   )
 );
